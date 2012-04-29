@@ -27,7 +27,6 @@ public:
     uint32_t getPixelColor(uint16_t n);
 
 private:
-    void latch();
     void spi_start(void);
     void spi_send(uint8_t* data, uint32_t data_len);
 

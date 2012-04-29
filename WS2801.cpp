@@ -32,8 +32,7 @@ void LPD8806::refresh(void)
 {
     // 3 bytes per LED
     spi_send(pixels, strip_length * 3);
-    usleep(300);
-    latch(); 
+    usleep(100);
 }
 
 void LPD8806::set_length(uint16_t n)
@@ -89,8 +88,8 @@ void LPD8806::spi_send(uint8_t* data, uint32_t data_len)
 	tr.rx_buf = (__u64)NULL;
     tr.tx_buf = (__u64)data;
 	tr.len = data_len;
-	tr.delay_usecs = 1;
-	tr.speed_hz = spi_speed;
+	tr.delay_usecs = 5;
+	tr.speed_hz = spi_speed / 5;
 	tr.bits_per_word = spi_bits;
     int8_t ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &tr);
 
@@ -132,13 +131,3 @@ void LPD8806::spi_start(void)
 	ret = ioctl(spi_fd, SPI_IOC_RD_MAX_SPEED_HZ, &spi_speed);
     assert(ret != -1);
 }
-
-void LPD8806::latch()
-{
-    uint16_t bufsize = ((strip_length + 63) / 64) * 3;
-    uint8_t *buf = (uint8_t*)calloc(bufsize, 1);
-    assert(buf != NULL);
-    spi_send(buf, bufsize);
-    free(buf);
-}
-
