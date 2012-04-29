@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "LPD8806.h"
+#include "WS2801.h"
 
 LPD8806 strip = LPD8806("/dev/spidev2.0", 160);
 

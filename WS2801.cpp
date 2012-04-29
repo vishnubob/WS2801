@@ -8,7 +8,7 @@
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
 #include <iostream>
-#include "LPD8806.h"
+#include "WS2801.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
