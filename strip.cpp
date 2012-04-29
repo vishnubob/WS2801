@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "WS2801.h"
 
-LPD8806 strip = LPD8806("/dev/spidev2.0", 160);
+WS2801 strip = WS2801("/dev/spidev2.0", 160);
 
 
 /* Helper functions */

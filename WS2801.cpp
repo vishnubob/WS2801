@@ -8,34 +8,52 @@
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
 #include <iostream>
+#include <string.h>
 #include "WS2801.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
-// Arduino library to control LPD8806-based RGB LED Strips
+// Arduino library to control WS2801-based RGB LED Strips
 // (c) Adafruit industries
 // (c) Giles Hall
 // MIT license
 
 /*****************************************************************************/
 
-// Constructor for use with hardware SPI (specific clock/data pins):
-LPD8806::LPD8806(const char* spi_device_arg, uint16_t n) :
-    spi_device(spi_device_arg),
-    spi_delay(3)
+void pabort()
 {
+    perror("abort");
+    exit(-1);
+}
+
+// Constructor for use with hardware SPI (specific clock/data pins):
+WS2801::WS2801(const char* spi_device_arg, uint16_t n) :
+    spi_delay(3),
+    pixels(0)
+{
+    spi_device = strdup(spi_device_arg);
     spi_start();
     set_length(n);
 }
 
-void LPD8806::refresh(void) 
+void WS2801::refresh(void) 
 {
     // 3 bytes per LED
     spi_send(pixels, strip_length * 3);
-    usleep(100);
 }
 
-void LPD8806::set_length(uint16_t n)
+void WS2801::set_pixels(uint8_t *data, bool _refresh)
+{
+    if (_refresh)
+    {
+        spi_send(data, strip_length * 3);
+    } else
+    }
+        memcpy(pixels, data, strip_length * 3);
+    }
+}
+
+void WS2801::set_length(uint16_t n)
 {
     if(pixels != NULL) { free(pixels); }
     pixels = (uint8_t *)calloc(n * 3, 1);
@@ -44,17 +62,17 @@ void LPD8806::set_length(uint16_t n)
     refresh();
 }
 
-uint32_t LPD8806::Color(uint8_t r, uint8_t g, uint8_t b) 
+uint32_t WS2801::Color(uint8_t r, uint8_t g, uint8_t b) 
 {
     return ((uint32_t)r << RED_FIXED) | ((uint32_t)g << GRN_FIXED) | ((uint32_t)b << BLU_FIXED);
 }
 
-void LPD8806::setPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b) 
+void WS2801::setPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b) 
 {
     setPixelColor(n, Color(r, g, b));
 }
 
-void LPD8806::setPixelColor(uint16_t n, uint32_t c) 
+void WS2801::setPixelColor(uint16_t n, uint32_t c) 
 {
     if(n < strip_length) 
     {
@@ -65,7 +83,7 @@ void LPD8806::setPixelColor(uint16_t n, uint32_t c)
     }
 }
 
-uint32_t LPD8806::getPixelColor(uint16_t n) 
+uint32_t WS2801::getPixelColor(uint16_t n) 
 {
     if(n < strip_length) 
     {
@@ -82,52 +100,43 @@ uint32_t LPD8806::getPixelColor(uint16_t n)
  ** SPI
  **/
 
-void LPD8806::spi_send(uint8_t* data, uint32_t data_len) 
+void WS2801::spi_send(uint8_t* data, uint32_t data_len) 
 {
 	struct spi_ioc_transfer tr;
 	tr.rx_buf = (__u64)NULL;
     tr.tx_buf = (__u64)data;
 	tr.len = data_len;
-	tr.delay_usecs = 5;
-	tr.speed_hz = spi_speed / 5;
+	tr.delay_usecs = 0;
+	tr.speed_hz = spi_speed;
 	tr.bits_per_word = spi_bits;
     int8_t ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &tr);
-
-    /*
-    for(size_t x = 0; x < data_len; ++x)
-    {
-        tr.tx_buf = (__u64)(data + x);
-        int8_t ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &tr);
-        if (ret < 0) perror("whoops");
-        assert(ret >= 0);
-    }
-    */
+    if (ret == -1) { pabort(); }
 }
 
 // Enable SPI hardware and set up protocol details:
-void LPD8806::spi_start(void) 
+void WS2801::spi_start(void) 
 {
     int ret;
     spi_mode = 0;
     spi_bits = 8;
-    spi_speed = 500000;
-    spi_delay = 10;
+    spi_speed = 2000000;
+    spi_delay = 0;
 
 	spi_fd = open(spi_device, O_RDWR);
-    assert(spi_fd != -1);
+    if (spi_fd == -1) { pabort(); }
 
 	ret = ioctl(spi_fd, SPI_IOC_WR_MODE, &spi_mode);
-    assert(ret != -1);
+    if (ret == -1) { pabort(); }
 	ret = ioctl(spi_fd, SPI_IOC_RD_MODE, &spi_mode);
-    assert(ret != -1);
+    if (ret == -1) { pabort(); }
 
 	ret = ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &spi_bits);
-    assert(ret != -1);
+    if (ret == -1) { pabort(); }
 	ret = ioctl(spi_fd, SPI_IOC_RD_BITS_PER_WORD, &spi_bits);
-    assert(ret != -1);
+    if (ret == -1) { pabort(); }
 
 	ret = ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi_speed);
-    assert(ret != -1);
+    if (ret == -1) { pabort(); }
 	ret = ioctl(spi_fd, SPI_IOC_RD_MAX_SPEED_HZ, &spi_speed);
-    assert(ret != -1);
+    if (ret == -1) { pabort(); }
 }
