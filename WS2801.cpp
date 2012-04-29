@@ -119,7 +119,7 @@ void WS2801::spi_start(void)
     int ret;
     spi_mode = 0;
     spi_bits = 8;
-    spi_speed = 2000000;
+    spi_speed = 5000000;
     spi_delay = 0;
 
 	spi_fd = open(spi_device, O_RDWR);
