@@ -48,7 +48,7 @@ void WS2801::set_pixels(uint8_t *data, bool _refresh)
     {
         spi_send(data, strip_length * 3);
     } else
-    }
+    {
         memcpy(pixels, data, strip_length * 3);
     }
 }
